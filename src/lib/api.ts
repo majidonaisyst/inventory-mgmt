@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5151/api";
 
 export interface InventoryItem {
   id: string;
@@ -80,3 +80,15 @@ export const generateLowStockSummary = async (): Promise<string> => {
     return "Unable to generate AI summary at this time.";
   }
 };
+
+// Default export object with all API functions
+const inventoryAPI = {
+  getInventoryItems,
+  addInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+  getSuggestedReorderQuantity,
+  generateLowStockSummary,
+};
+
+export default inventoryAPI;

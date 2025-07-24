@@ -8,16 +8,8 @@
     "status": "In Stock"
   },
   {
-    "id": "2",
-    "name": "Office Chair",
-    "quantity": 3,
-    "category": "Furniture",
-    "description": "Ergonomic office chair with lumbar support",
-    "status": "Low Stock"
-  },
-  {
     "id": "3",
-    "name": "Wireless Mouse",
+    "name": "Wireless",
     "quantity": 25,
     "category": "Electronics",
     "description": "Bluetooth wireless mouse",
@@ -26,7 +18,7 @@
   {
     "id": "4",
     "name": "Standing Desk",
-    "quantity": 0,
+    "quantity": 12,
     "category": "Furniture",
     "description": "Height adjustable standing desk",
     "status": "Ordered"

@@ -1,5 +1,5 @@
 import { InventoryItem } from "@/types/inventory";
-import { inventoryAPI } from "./api";
+import inventoryAPI from "./api";
 
 // Mock data for initial inventory (fallback if API is not available)
 export const mockInventoryData: InventoryItem[] = [
@@ -78,11 +78,11 @@ export const mockInventoryData: InventoryItem[] = [
 // API-based data operations
 export const loadInventoryData = async (): Promise<InventoryItem[]> => {
   try {
-    const data = await inventoryAPI.getAllItems();
+    const data = await inventoryAPI.getInventoryItems();
     return data.map((item: any) => ({
       ...item,
-      createdAt: new Date(item.createdAt),
-      updatedAt: new Date(item.updatedAt),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     }));
   } catch (error) {
     console.error(
@@ -102,11 +102,16 @@ export const saveInventoryItem = async (
   }
 ): Promise<InventoryItem> => {
   try {
-    const data = await inventoryAPI.createItem(item);
+    // Ensure status is set if not provided
+    const itemToSave = {
+      ...item,
+      status: item.status || "In Stock" as const,
+    };
+    const data = await inventoryAPI.addInventoryItem(itemToSave);
     return {
       ...data,
-      createdAt: new Date(data.createdAt),
-      updatedAt: new Date(data.updatedAt),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
   } catch (error) {
     console.error("Failed to save inventory item:", error);
@@ -119,11 +124,11 @@ export const updateInventoryItem = async (
   updates: Partial<InventoryItem>
 ): Promise<InventoryItem> => {
   try {
-    const data = await inventoryAPI.updateItem(id, updates);
+    const data = await inventoryAPI.updateInventoryItem(id, updates);
     return {
       ...data,
-      createdAt: new Date(data.createdAt),
-      updatedAt: new Date(data.updatedAt),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
   } catch (error) {
     console.error("Failed to update inventory item:", error);
@@ -133,7 +138,7 @@ export const updateInventoryItem = async (
 
 export const deleteInventoryItem = async (id: string): Promise<void> => {
   try {
-    await inventoryAPI.deleteItem(id);
+    await inventoryAPI.deleteInventoryItem(id);
   } catch (error) {
     console.error("Failed to delete inventory item:", error);
     throw error;
@@ -145,8 +150,8 @@ export const suggestReorderQuantity = async (
   item: InventoryItem
 ): Promise<number> => {
   try {
-    const response = await inventoryAPI.getReorderSuggestion(item.id);
-    return response.suggestedQuantity;
+    const response = await inventoryAPI.getSuggestedReorderQuantity(item.id);
+    return response.suggestion;
   } catch (error) {
     console.error(
       "Failed to get AI reorder suggestion, using fallback:",
@@ -161,8 +166,8 @@ export const suggestReorderQuantity = async (
 
 export const generateLowStockSummary = async (): Promise<string> => {
   try {
-    const response = await inventoryAPI.getLowStockSummary();
-    return response.summary;
+    const response = await inventoryAPI.generateLowStockSummary();
+    return response;
   } catch (error) {
     console.error("Failed to get AI low stock summary, using fallback:", error);
     // Fallback logic
