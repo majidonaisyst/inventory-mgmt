@@ -79,7 +79,7 @@ export const mockInventoryData: InventoryItem[] = [
 export const loadInventoryData = async (): Promise<InventoryItem[]> => {
   try {
     const data = await inventoryAPI.getInventoryItems();
-    return data.map((item: any) => ({
+    return data.map((item: Omit<InventoryItem, "createdAt" | "updatedAt">) => ({
       ...item,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -105,7 +105,7 @@ export const saveInventoryItem = async (
     // Ensure status is set if not provided
     const itemToSave = {
       ...item,
-      status: item.status || "In Stock" as const,
+      status: item.status || ("In Stock" as const),
     };
     const data = await inventoryAPI.addInventoryItem(itemToSave);
     return {
