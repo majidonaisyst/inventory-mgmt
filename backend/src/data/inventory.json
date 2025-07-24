@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "Laptop Computer",
+    "quantity": 15,
+    "category": "Electronics",
+    "description": "High-performance business laptop",
+    "status": "In Stock",
+    "createdAt": "2024-01-15T00:00:00.000Z",
+    "updatedAt": "2024-01-20T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "name": "Office Chair",
+    "quantity": 3,
+    "category": "Furniture",
+    "description": "Ergonomic office chair with lumbar support",
+    "status": "Low Stock",
+    "createdAt": "2024-01-10T00:00:00.000Z",
+    "updatedAt": "2024-01-25T00:00:00.000Z"
+  },
+  {
+    "id": "4",
+    "name": "Printer Paper",
+    "quantity": 0,
+    "category": "Office Supplies",
+    "description": "A4 white printer paper, 500 sheets per pack",
+    "status": "Ordered",
+    "createdAt": "2024-01-08T00:00:00.000Z",
+    "updatedAt": "2024-01-22T00:00:00.000Z"
+  },
+  {
+    "id": "5",
+    "name": "Standing Desk",
+    "quantity": 2,
+    "category": "Furniture",
+    "description": "Height-adjustable standing desk",
+    "status": "Low Stock",
+    "createdAt": "2024-01-05T00:00:00.000Z",
+    "updatedAt": "2024-01-23T00:00:00.000Z"
+  }
+]
