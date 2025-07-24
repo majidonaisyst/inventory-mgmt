@@ -1,5 +1,14 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5151/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+// Helper to get auth headers
+const getAuthHeaders = (): HeadersInit => {
+  const token = localStorage.getItem("inventory_token");
+  return {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 export interface InventoryItem {
   id: string;
@@ -12,7 +21,9 @@ export interface InventoryItem {
 
 export const getInventoryItems = async (): Promise<InventoryItem[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/inventory`);
+    const response = await fetch(`${API_BASE_URL}/inventory`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to fetch items");
     return await response.json();
   } catch (error) {
@@ -26,7 +37,7 @@ export const addInventoryItem = async (
 ): Promise<InventoryItem> => {
   const response = await fetch(`${API_BASE_URL}/inventory`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(item),
   });
   if (!response.ok) throw new Error("Failed to add item");
@@ -39,7 +50,7 @@ export const updateInventoryItem = async (
 ): Promise<InventoryItem> => {
   const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify(item),
   });
   if (!response.ok) throw new Error("Failed to update item");
@@ -49,6 +60,7 @@ export const updateInventoryItem = async (
 export const deleteInventoryItem = async (id: string): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
     method: "DELETE",
+    headers: getAuthHeaders(),
   });
   if (!response.ok) throw new Error("Failed to delete item");
 };
@@ -58,7 +70,10 @@ export const getSuggestedReorderQuantity = async (
 ): Promise<{ suggestion: number; reasoning: string }> => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/inventory/${id}/suggest-reorder`
+      `${API_BASE_URL}/inventory/${id}/suggest-reorder`,
+      {
+        headers: getAuthHeaders(),
+      }
     );
     if (!response.ok) throw new Error("Failed to get suggestion");
     return await response.json();
@@ -72,7 +87,9 @@ export const getSuggestedReorderQuantity = async (
 
 export const generateLowStockSummary = async (): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/summary/low-stock`);
+    const response = await fetch(`${API_BASE_URL}/summary/low-stock`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error("Failed to get summary");
     const data = await response.json();
     return data.summary;

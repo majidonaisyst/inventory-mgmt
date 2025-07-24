@@ -12,8 +12,12 @@ import { ItemCard } from "@/components/ItemCard";
 import { ItemForm } from "@/components/ItemForm";
 import { SearchFilter } from "@/components/SearchFilter";
 import { DashboardStats } from "@/components/DashboardStats";
+import { useAuth } from "@/contexts/AuthContext";
+import { PermissionGuard, UserProfile } from "@/components/PermissionGuard";
+import LoginForm from "@/components/LoginForm";
 
 export default function Home() {
+  const { user } = useAuth();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -33,14 +37,22 @@ export default function Home() {
         setError(null);
       } catch (err) {
         setError("Failed to load inventory data");
-        console.error("Failed to load data:", err);
+        console.error("Failed to load inventory:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, []);
+    // Only fetch data if user is authenticated
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
+
+  // Show login form if not authenticated
+  if (!user) {
+    return <LoginForm />;
+  }
 
   const handleAddItem = async (data: CreateItemData) => {
     try {
@@ -131,6 +143,11 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* User Profile Header */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+          <UserProfile />
+        </div>
+
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -154,18 +171,22 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
-            >
-              <span className="text-lg">+</span>
-              Add New Item
-            </button>
+            <PermissionGuard permission="create_item">
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 flex items-center gap-2"
+              >
+                <span className="text-lg">+</span>
+                Add New Item
+              </button>
+            </PermissionGuard>
           </div>
         </div>
 
         {/* Dashboard Stats */}
-        <DashboardStats items={items} />
+        <PermissionGuard permission="view_stats">
+          <DashboardStats items={items} />
+        </PermissionGuard>
 
         {/* Search and Filters */}
         <SearchFilter

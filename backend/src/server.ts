@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import { authService } from "./services/authService";
+import { authenticate, requirePermission } from "./middleware/auth";
+import { AuthRequest } from "./types/inventory";
 
 // Define proper TypeScript interfaces
 interface InventoryItem {
@@ -114,63 +117,103 @@ const writeInventory = (data: InventoryItem[]): void => {
   }
 };
 
-// Routes with proper typing
-app.get("/api/inventory", (req, res) => {
-  const inventory = readInventory();
-  res.json(inventory);
-});
+// Auth Routes (simple)
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await authService.login(email, password);
 
-app.post("/api/inventory", (req, res) => {
-  const inventory = readInventory();
-  const newItem: InventoryItem = {
-    id: Date.now().toString(),
-    ...req.body,
-    status:
-      req.body.quantity <= 5 ? "Low Stock" : req.body.status || "In Stock",
-  };
+    if (!result) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-  inventory.push(newItem);
-  writeInventory(inventory);
-  res.status(201).json(newItem);
-});
-
-app.put("/api/inventory/:id", (req, res) => {
-  const inventory = readInventory();
-  const itemIndex = inventory.findIndex(
-    (item: InventoryItem) => item.id === req.params.id
-  );
-
-  if (itemIndex === -1) {
-    return res.status(404).json({ error: "Item not found" } as ApiResponse);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Login failed" });
   }
-
-  const updatedItem: InventoryItem = {
-    ...inventory[itemIndex],
-    ...req.body,
-    status:
-      req.body.quantity <= 5
-        ? "Low Stock"
-        : req.body.status || inventory[itemIndex].status,
-  };
-
-  inventory[itemIndex] = updatedItem;
-  writeInventory(inventory);
-  res.json(updatedItem);
 });
 
-app.delete("/api/inventory/:id", (req, res) => {
-  const inventory = readInventory();
-  const filteredInventory = inventory.filter(
-    (item: InventoryItem) => item.id !== req.params.id
-  );
+app.post("/api/auth/verify", authenticate, (req: AuthRequest, res) => {
+  res.json({ user: req.user });
+});
 
-  if (inventory.length === filteredInventory.length) {
-    return res.status(404).json({ error: "Item not found" } as ApiResponse);
+// Routes with proper typing (now protected)
+app.get(
+  "/api/inventory",
+  authenticate,
+  requirePermission("view"),
+  (req, res) => {
+    const inventory = readInventory();
+    res.json(inventory);
   }
+);
 
-  writeInventory(filteredInventory);
-  res.json({ message: "Item deleted successfully" } as ApiResponse);
-});
+app.post(
+  "/api/inventory",
+  authenticate,
+  requirePermission("create"),
+  (req, res) => {
+    const inventory = readInventory();
+    const newItem: InventoryItem = {
+      id: Date.now().toString(),
+      ...req.body,
+      status:
+        req.body.quantity <= 5 ? "Low Stock" : req.body.status || "In Stock",
+    };
+
+    inventory.push(newItem);
+    writeInventory(inventory);
+    res.status(201).json(newItem);
+  }
+);
+
+app.put(
+  "/api/inventory/:id",
+  authenticate,
+  requirePermission("edit"),
+  (req, res) => {
+    const inventory = readInventory();
+    const itemIndex = inventory.findIndex(
+      (item: InventoryItem) => item.id === req.params.id
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: "Item not found" } as ApiResponse);
+    }
+
+    const updatedItem: InventoryItem = {
+      ...inventory[itemIndex],
+      ...req.body,
+      status:
+        req.body.quantity <= 5
+          ? "Low Stock"
+          : req.body.status || inventory[itemIndex].status,
+    };
+
+    inventory[itemIndex] = updatedItem;
+    writeInventory(inventory);
+    res.json(updatedItem);
+  }
+);
+
+app.delete(
+  "/api/inventory/:id",
+  authenticate,
+  requirePermission("delete"),
+  (req, res) => {
+    const inventory = readInventory();
+    const filteredInventory = inventory.filter(
+      (item: InventoryItem) => item.id !== req.params.id
+    );
+
+    if (inventory.length === filteredInventory.length) {
+      return res.status(404).json({ error: "Item not found" } as ApiResponse);
+    }
+
+    writeInventory(filteredInventory);
+    res.json({ message: "Item deleted successfully" } as ApiResponse);
+  }
+);
 
 app.get("/api/inventory/:id/suggest-reorder", (req, res) => {
   const inventory = readInventory();

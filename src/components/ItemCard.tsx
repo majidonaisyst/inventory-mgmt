@@ -1,6 +1,7 @@
 import React from "react";
 import { InventoryItem } from "@/types/inventory";
 import { suggestReorderQuantity } from "@/lib/inventory";
+import { PermissionGuard } from "./PermissionGuard";
 
 interface ItemCardProps {
   item: InventoryItem;
@@ -141,18 +142,22 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       )}
 
       <div className="flex gap-3">
-        <button
-          onClick={() => onEdit(item)}
-          className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-        >
-          ✏️ Edit
-        </button>
-        <button
-          onClick={() => onDelete(item.id)}
-          className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-        >
-          🗑️ Delete
-        </button>
+        <PermissionGuard permission="edit_item">
+          <button
+            onClick={() => onEdit(item)}
+            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            ✏️ Edit
+          </button>
+        </PermissionGuard>
+        <PermissionGuard permission="delete_item">
+          <button
+            onClick={() => onDelete(item.id)}
+            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+          >
+            🗑️ Delete
+          </button>
+        </PermissionGuard>
       </div>
     </div>
   );
