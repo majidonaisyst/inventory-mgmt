@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "name": "MacBook Pro 16\"",
+    "quantity": 12,
+    "category": "Electronics",
+    "description": "Latest MacBook Pro with M3 chip",
+    "status": "In Stock"
+  },
+  {
+    "id": "2",
+    "name": "Office Chair",
+    "quantity": 3,
+    "category": "Furniture",
+    "description": "Ergonomic office chair with lumbar support",
+    "status": "Low Stock"
+  },
+  {
+    "id": "3",
+    "name": "Wireless Mouse",
+    "quantity": 25,
+    "category": "Electronics",
+    "description": "Bluetooth wireless mouse",
+    "status": "In Stock"
+  },
+  {
+    "id": "4",
+    "name": "Standing Desk",
+    "quantity": 0,
+    "category": "Furniture",
+    "description": "Height adjustable standing desk",
+    "status": "Ordered"
+  },
+  {
+    "id": "5",
+    "name": "USB-C Hub",
+    "quantity": 8,
+    "category": "Electronics",
+    "description": "7-in-1 USB-C hub with HDMI",
+    "status": "In Stock"
+  }
+]

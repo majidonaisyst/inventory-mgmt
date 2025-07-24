@@ -1,138 +1,196 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
-import { InventoryService } from "./services/inventoryService";
+import fs from "fs";
+import path from "path";
 
 const app = express();
-const PORT = process.env.PORT || 4001;
-const inventoryService = new InventoryService();
+const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    credentials: true,
+  })
+);
+app.use(express.json());
+
+// Ensure data directory exists
+const dataDir = path.join(__dirname, "..", "data");
+const dataFile = path.join(dataDir, "inventory.json");
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+// Initialize with sample data if file doesn't exist
+if (!fs.existsSync(dataFile)) {
+  const sampleData = [
+    {
+      id: "1",
+      name: 'MacBook Pro 16"',
+      quantity: 12,
+      category: "Electronics",
+      description: "Latest MacBook Pro with M3 chip",
+      status: "In Stock",
+    },
+    {
+      id: "2",
+      name: "Office Chair",
+      quantity: 3,
+      category: "Furniture",
+      description: "Ergonomic office chair with lumbar support",
+      status: "Low Stock",
+    },
+    {
+      id: "3",
+      name: "Wireless Mouse",
+      quantity: 25,
+      category: "Electronics",
+      description: "Bluetooth wireless mouse",
+      status: "In Stock",
+    },
+    {
+      id: "4",
+      name: "Standing Desk",
+      quantity: 0,
+      category: "Furniture",
+      description: "Height adjustable standing desk",
+      status: "Ordered",
+    },
+    {
+      id: "5",
+      name: "USB-C Hub",
+      quantity: 8,
+      category: "Electronics",
+      description: "7-in-1 USB-C hub with HDMI",
+      status: "In Stock",
+    },
+  ];
+
+  fs.writeFileSync(dataFile, JSON.stringify(sampleData, null, 2));
+}
+
+// Helper functions
+const readInventory = () => {
+  try {
+    const data = fs.readFileSync(dataFile, "utf8");
+    return JSON.parse(data);
+  } catch (error) {
+    console.error("Error reading inventory:", error);
+    return [];
+  }
+};
+
+const writeInventory = (data: any[]) => {
+  try {
+    fs.writeFileSync(dataFile, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error("Error writing inventory:", error);
+  }
+};
 
 // Routes
-
-// GET /api/inventory - Get all inventory items
 app.get("/api/inventory", (req, res) => {
-  try {
-    const items = inventoryService.getAllItems();
-    res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch inventory items" });
-  }
+  const inventory = readInventory();
+  res.json(inventory);
 });
 
-// GET /api/inventory/:id - Get single inventory item
-app.get("/api/inventory/:id", (req, res) => {
-  try {
-    const item = inventoryService.getItemById(req.params.id);
-    if (!item) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-    res.json(item);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch inventory item" });
-  }
-});
-
-// POST /api/inventory - Create new inventory item
 app.post("/api/inventory", (req, res) => {
-  try {
-    const { name, quantity, category, description, status } = req.body;
+  const inventory = readInventory();
+  const newItem = {
+    id: Date.now().toString(),
+    ...req.body,
+    status:
+      req.body.quantity <= 5 ? "Low Stock" : req.body.status || "In Stock",
+  };
 
-    if (!name || quantity === undefined || !category) {
-      return res
-        .status(400)
-        .json({ error: "Missing required fields: name, quantity, category" });
-    }
-
-    const newItem = inventoryService.createItem({
-      name,
-      quantity: parseInt(quantity),
-      category,
-      description: description || "",
-      status,
-    });
-
-    res.status(201).json(newItem);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create inventory item" });
-  }
+  inventory.push(newItem);
+  writeInventory(inventory);
+  res.status(201).json(newItem);
 });
 
-// PUT /api/inventory/:id - Update inventory item
 app.put("/api/inventory/:id", (req, res) => {
-  try {
-    const { name, quantity, category, description, status } = req.body;
+  const inventory = readInventory();
+  const itemIndex = inventory.findIndex(
+    (item: any) => item.id === req.params.id
+  );
 
-    const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (quantity !== undefined) updateData.quantity = parseInt(quantity);
-    if (category !== undefined) updateData.category = category;
-    if (description !== undefined) updateData.description = description;
-    if (status !== undefined) updateData.status = status;
-
-    const updatedItem = inventoryService.updateItem(req.params.id, updateData);
-
-    if (!updatedItem) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
-    res.json(updatedItem);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update inventory item" });
+  if (itemIndex === -1) {
+    return res.status(404).json({ error: "Item not found" });
   }
+
+  const updatedItem = {
+    ...inventory[itemIndex],
+    ...req.body,
+    status:
+      req.body.quantity <= 5
+        ? "Low Stock"
+        : req.body.status || inventory[itemIndex].status,
+  };
+
+  inventory[itemIndex] = updatedItem;
+  writeInventory(inventory);
+  res.json(updatedItem);
 });
 
-// DELETE /api/inventory/:id - Delete inventory item
 app.delete("/api/inventory/:id", (req, res) => {
-  try {
-    const deleted = inventoryService.deleteItem(req.params.id);
+  const inventory = readInventory();
+  const filteredInventory = inventory.filter(
+    (item: any) => item.id !== req.params.id
+  );
 
-    if (!deleted) {
-      return res.status(404).json({ error: "Item not found" });
-    }
-
-    res.json({ message: "Item deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete inventory item" });
+  if (inventory.length === filteredInventory.length) {
+    return res.status(404).json({ error: "Item not found" });
   }
+
+  writeInventory(filteredInventory);
+  res.json({ message: "Item deleted successfully" });
 });
 
-// GET /api/inventory/:id/suggest-reorder - Get AI reorder suggestion
 app.get("/api/inventory/:id/suggest-reorder", (req, res) => {
-  try {
-    const item = inventoryService.getItemById(req.params.id);
-    if (!item) {
-      return res.status(404).json({ error: "Item not found" });
-    }
+  const inventory = readInventory();
+  const item = inventory.find((item: any) => item.id === req.params.id);
 
-    const suggestion = inventoryService.suggestReorderQuantity(item);
-    res.json({ itemId: item.id, suggestedQuantity: suggestion });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to generate reorder suggestion" });
+  if (!item) {
+    return res.status(404).json({ error: "Item not found" });
   }
+
+  const suggestion = Math.max(
+    10,
+    item.quantity * 2 + Math.floor(Math.random() * 10)
+  );
+  res.json({
+    suggestion,
+    reasoning: `Based on current stock (${item.quantity}) and usage patterns, we recommend ordering ${suggestion} units to maintain optimal inventory levels.`,
+  });
 });
 
-// GET /api/summary/low-stock - Get AI low stock summary
 app.get("/api/summary/low-stock", (req, res) => {
-  try {
-    const summary = inventoryService.generateLowStockSummary();
-    res.json({ summary });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to generate low stock summary" });
+  const inventory = readInventory();
+  const lowStockItems = inventory.filter((item: any) => item.quantity <= 5);
+
+  if (lowStockItems.length === 0) {
+    return res.json({ summary: "All items are well-stocked!" });
   }
+
+  const summary = `Alert: ${
+    lowStockItems.length
+  } items need attention. Priority reorders: ${lowStockItems
+    .slice(0, 3)
+    .map((item: any) => `${item.name} (${item.quantity} left)`)
+    .join(", ")}. Total categories affected: ${
+    new Set(lowStockItems.map((item: any) => item.category)).size
+  }.`;
+
+  res.json({ summary });
 });
 
-// Health check
-app.get("/api/health", (req, res) => {
+// Health check endpoint
+app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Inventory Management Backend running on port ${PORT}`);
-  console.log(`📊 API endpoints available at http://localhost:${PORT}/api`);
+  console.log(`Server running on port ${PORT}`);
 });

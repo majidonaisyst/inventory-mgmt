@@ -1,83 +1,82 @@
-const API_BASE_URL = "http://localhost:4001/api";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
-export const inventoryAPI = {
-  // Get all inventory items
-  getAllItems: async () => {
+export interface InventoryItem {
+  id: string;
+  name: string;
+  quantity: number;
+  category: string;
+  description: string;
+  status: "In Stock" | "Low Stock" | "Ordered" | "Discontinued";
+}
+
+export const getInventoryItems = async (): Promise<InventoryItem[]> => {
+  try {
     const response = await fetch(`${API_BASE_URL}/inventory`);
     if (!response.ok) throw new Error("Failed to fetch items");
-    return response.json();
-  },
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching inventory:", error);
+    return [];
+  }
+};
 
-  // Get single item
-  getItem: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/inventory/${id}`);
-    if (!response.ok) throw new Error("Failed to fetch item");
-    return response.json();
-  },
+export const addInventoryItem = async (
+  item: Omit<InventoryItem, "id">
+): Promise<InventoryItem> => {
+  const response = await fetch(`${API_BASE_URL}/inventory`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+  if (!response.ok) throw new Error("Failed to add item");
+  return await response.json();
+};
 
-  // Create new item
-  createItem: async (data: {
-    name: string;
-    quantity: number;
-    category: string;
-    description: string;
-    status?: string;
-  }) => {
-    const response = await fetch(`${API_BASE_URL}/inventory`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error("Failed to create item");
-    return response.json();
-  },
+export const updateInventoryItem = async (
+  id: string,
+  item: Partial<InventoryItem>
+): Promise<InventoryItem> => {
+  const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(item),
+  });
+  if (!response.ok) throw new Error("Failed to update item");
+  return await response.json();
+};
 
-  // Update item
-  updateItem: async (
-    id: string,
-    data: {
-      name?: string;
-      quantity?: number;
-      category?: string;
-      description?: string;
-      status?: string;
-    }
-  ) => {
-    const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) throw new Error("Failed to update item");
-    return response.json();
-  },
+export const deleteInventoryItem = async (id: string): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete item");
+};
 
-  // Delete item
-  deleteItem: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) throw new Error("Failed to delete item");
-    return response.json();
-  },
-
-  // Get AI reorder suggestion
-  getReorderSuggestion: async (id: string) => {
+export const getSuggestedReorderQuantity = async (
+  id: string
+): Promise<{ suggestion: number; reasoning: string }> => {
+  try {
     const response = await fetch(
       `${API_BASE_URL}/inventory/${id}/suggest-reorder`
     );
-    if (!response.ok) throw new Error("Failed to get reorder suggestion");
-    return response.json();
-  },
+    if (!response.ok) throw new Error("Failed to get suggestion");
+    return await response.json();
+  } catch (error) {
+    return {
+      suggestion: 10,
+      reasoning: "Unable to connect to AI service. Showing default suggestion.",
+    };
+  }
+};
 
-  // Get AI low stock summary
-  getLowStockSummary: async () => {
+export const generateLowStockSummary = async (): Promise<string> => {
+  try {
     const response = await fetch(`${API_BASE_URL}/summary/low-stock`);
-    if (!response.ok) throw new Error("Failed to get low stock summary");
-    return response.json();
-  },
+    if (!response.ok) throw new Error("Failed to get summary");
+    const data = await response.json();
+    return data.summary;
+  } catch (error) {
+    return "Unable to generate AI summary at this time.";
+  }
 };
