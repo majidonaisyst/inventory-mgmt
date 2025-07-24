@@ -1,182 +1,123 @@
-# Inventory Management System
+# Inventory Management System - Setup Guide
 
-A minimal but functional inventory management system built with Next.js, TypeScript, and TailwindCSS.
+## Complete Full-Stack Setup
 
-## Features
+You now have a complete inventory management system with:
 
-### ✅ Core Inventory Management
-
-- **CRUD Operations**: Add, edit, delete inventory items
-- **Item Fields**: name, quantity, category, description, status
-- **Status Types**: In Stock, Low Stock, Ordered, Discontinued
-- **Automatic Status Tracking**: Items with quantity ≤ 5 automatically marked as "Low Stock"
-
-### 🔍 Search & Filtering
-
-- **Text Search**: Search by item name, description, or category
-- **Status Filter**: Filter by all status types
-- **Category Filter**: Filter by item categories
-- **Real-time Filtering**: All filters work together seamlessly
-
-### 🤖 AI Features
-
-- **Smart Reorder Suggestions**: Click "AI Suggestion" on low-stock items for recommended reorder quantities
-- **Inventory Summary**: AI-generated summary of low-stock items with actionable insights
-- **Category Insights**: Analysis across different product categories
-
-### 📊 Dashboard & Analytics
-
-- **Live Statistics**: Total items, in-stock count, low-stock alerts, ordered items
-- **Category Overview**: Number of unique categories and total quantities
-- **Visual Status Cards**: Color-coded status indicators
-
-## Tech Stack
-
-- **Frontend**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **State Management**: React hooks (useState, useEffect)
-- **Data Persistence**: localStorage (no backend required)
-- **AI Features**: Mock implementation (easily extensible)
+- **Frontend**: Next.js with TypeScript and TailwindCSS
+- **Backend**: Express.js with TypeScript
+- **Database**: JSON file (simple file-based storage)
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js 18.17 or later
-- npm, yarn, pnpm, or bun
-
-### Installation & Setup
-
-1. **Clone and install dependencies**:
-
-   ```bash
-   npm install
-   ```
-
-2. **Run the development server**:
-
-   ```bash
-   npm run dev
-   ```
-
-3. **Open in browser**:
-   ```
-   http://localhost:3000
-   ```
-
-### Usage
-
-1. **View Dashboard**: See inventory statistics and AI insights
-2. **Add Items**: Click "Add New Item" to create inventory entries
-3. **Search & Filter**: Use the search bar and dropdown filters
-4. **Edit Items**: Click "Edit" on any item card
-5. **AI Suggestions**: Click "AI Suggestion" on low-stock items
-6. **Delete Items**: Click "Delete" with confirmation prompt
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── globals.css          # Global styles
-│   ├── layout.tsx           # Root layout
-│   └── page.tsx             # Main inventory page
-├── components/
-│   ├── DashboardStats.tsx   # Statistics dashboard
-│   ├── ItemCard.tsx         # Individual item display
-│   ├── ItemForm.tsx         # Add/edit form modal
-│   └── SearchFilter.tsx     # Search and filtering
-├── lib/
-│   └── inventory.ts         # Data management & AI functions
-└── types/
-    └── inventory.ts         # TypeScript interfaces
-```
-
-## Key Components
-
-### ItemCard
-
-- Displays item information with status badges
-- Color-coded status indicators
-- Edit/Delete actions
-- AI suggestion integration for low-stock items
-
-### ItemForm
-
-- Modal form for adding/editing items
-- Form validation
-- Auto-status calculation based on quantity
-
-### SearchFilter
-
-- Real-time text search
-- Status and category dropdown filters
-- Dynamic category list generation
-
-### DashboardStats
-
-- Live inventory statistics
-- AI-powered low-stock summary
-- Visual metrics cards
-
-## Data Model
-
-```typescript
-interface InventoryItem {
-  id: string;
-  name: string;
-  quantity: number;
-  category: string;
-  description: string;
-  status: "In Stock" | "Low Stock" | "Ordered" | "Discontinued";
-  createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-## AI Features Implementation
-
-The system includes mock AI functionality that can be easily extended:
-
-- **Reorder Suggestions**: Based on quantity and category analysis
-- **Low Stock Summaries**: Intelligent text generation for alerts
-- **Future Extensions**: Ready for OpenAI API integration
-
-## Sample Data
-
-The system comes pre-loaded with sample inventory items including:
-
-- Electronics (laptops, mice, cables)
-- Furniture (chairs, desks)
-- Office supplies (paper, etc.)
-
-Data persists in localStorage between sessions.
-
-## Development Commands
+### 1. Install Frontend Dependencies
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
+npm install
 ```
 
-## Browser Support
+### 2. Install Backend Dependencies
 
-- Modern browsers with ES2017+ support
-- Chrome, Firefox, Safari, Edge
-- Mobile responsive design
+```bash
+cd backend
+npm install
+cd ..
+```
 
-## Future Enhancements
+### 3. Start Both Servers
 
-- [ ] Export/Import functionality
-- [ ] Real OpenAI API integration
-- [ ] Print reports
-- [ ] Barcode scanning
-- [ ] Multi-user support
-- [ ] Database backend integration
+**Option A: Manual (Recommended for Development)**
 
----
+```bash
+# Terminal 1: Start Backend (Port 5000)
+cd backend
+npm run dev
 
-Built with ❤️ using Next.js and TypeScript
+# Terminal 2: Start Frontend (Port 3001)
+npm run dev
+```
+
+**Option B: Using Package Scripts**
+
+```bash
+# Start backend first
+npm run start:backend
+
+# Then start frontend
+npm run start:frontend
+```
+
+## API Endpoints
+
+The backend provides these REST API endpoints:
+
+- `GET /api/inventory` - Get all items
+- `GET /api/inventory/:id` - Get single item
+- `POST /api/inventory` - Create new item
+- `PUT /api/inventory/:id` - Update item
+- `DELETE /api/inventory/:id` - Delete item
+- `GET /api/inventory/:id/suggest-reorder` - Get AI reorder suggestion
+- `GET /api/summary/low-stock` - Get AI low stock summary
+- `GET /api/health` - Health check
+
+## Features
+
+### ✅ Implemented Features
+
+1. **CRUD Operations**: Complete create, read, update, delete for inventory items
+2. **Automatic Status Tracking**: Items with quantity ≤ 5 automatically marked as "Low Stock"
+3. **Search & Filtering**: Text search + status/category filters
+4. **AI Features**:
+   - Smart reorder quantity suggestions
+   - Automated low-stock summaries
+5. **Dashboard**: Live statistics and insights
+6. **API Integration**: Frontend connected to Express backend
+7. **Data Persistence**: JSON file database
+
+### 🎯 Tech Stack
+
+- **Frontend**: Next.js 15, React 18, TypeScript, TailwindCSS
+- **Backend**: Express.js, TypeScript, Node.js
+- **Database**: JSON file (easy to migrate to real DB later)
+- **Development**: Hot reload for both frontend and backend
+
+## File Structure
+
+```
+├── src/                    # Frontend source
+│   ├── app/               # Next.js app router
+│   ├── components/        # React components
+│   ├── lib/              # Utilities & API client
+│   └── types/            # TypeScript types
+├── backend/               # Backend source
+│   ├── src/
+│   │   ├── server.ts     # Express server
+│   │   ├── services/     # Business logic
+│   │   ├── types/        # Backend types
+│   │   └── data/         # JSON database
+│   └── package.json      # Backend dependencies
+└── package.json          # Frontend dependencies
+```
+
+## Development Notes
+
+1. **CORS**: Backend configured for frontend on localhost:3001
+2. **Error Handling**: Frontend falls back to mock data if backend unavailable
+3. **Type Safety**: Shared TypeScript interfaces between frontend/backend
+4. **Hot Reload**: Both servers support hot reload during development
+
+## Next Steps
+
+1. **Start the servers** using the commands above
+2. **Open the app** at http://localhost:3001
+3. **Test the API** at http://localhost:5000/api/health
+4. **Add inventory items** and test all features
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. Ensure Node.js 18+ is installed
+2. Check that ports 3001 and 5000 are available
+3. Verify backend dependencies installed correctly
+4. Check console for any TypeScript compilation errors
